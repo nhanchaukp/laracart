@@ -1,4 +1,9 @@
 # LaraCart
+![Build Status](https://img.shields.io/github/actions/workflow/status/nhanchaukp/laracart/ci.yml?branch=main) 
+![License](https://img.shields.io/github/license/nhanchaukp/laracart) 
+![Downloads](https://img.shields.io/packagist/dt/nhanchaukp/laracart) 
+![Contributors](https://img.shields.io/github/contributors/nhanchaukp/laracart) 
+![PHP Version Require](https://img.shields.io/packagist/php-v/nhanchaukp/laracart) ![Packagist Version](https://img.shields.io/packagist/v/nhanchaukp/laracart)
 
 LaraCart is a Laravel package that provides a flexible and extensible shopping cart system. It supports multiple storage drivers (e.g., database, session) and offers a wide range of features for managing shopping carts in your Laravel application.
 
