@@ -97,10 +97,15 @@ class DatabaseDriver implements CartDriver
     {
         $cart = $this->getCart();
         $item = $cart->items()->where('itemable_id', $itemable->id)->where('itemable_type', get_class($itemable))->first();
-        if ($item) {
-            $item->quantity = $quantity;
-            $item->save();
+        
+        if (! $item) {
+            throw new \RuntimeException('The item not found');
         }
+        if ($quantity < 1) {
+            throw new \RuntimeException('The quantity must be greater than 0');
+        }
+        $item->quantity = $quantity;
+        $item->save();
 
         return $this->getCart();
     }
@@ -120,11 +125,15 @@ class DatabaseDriver implements CartDriver
     {
         $cart = $this->getCart();
         $item = $cart->items()->where('itemable_id', $itemable->id)->where('itemable_type', get_class($itemable))->first();
-        if ($item) {
-            $item->quantity = max(1, $item->quantity - $quantity);
-            $item->save();
+        if (! $item) {
+            throw new \RuntimeException('The item not found');
         }
-
+        if ($quantity < 1) {
+            throw new \RuntimeException('The quantity must be greater than 0');
+        }
+        $item->quantity = max(1, $item->quantity - $quantity);
+        $item->save();
+        
         return $this->getCart();
     }
 
