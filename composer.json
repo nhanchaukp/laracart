@@ -1,6 +1,14 @@
 {
     "name": "nhanchaukp/laracart",
     "description": "Enhanced Laravel shopping cart package with multiple storage drivers",
+    "keywords": [
+        "laravel",
+        "laravel cart",
+        "laravel shopping cart",
+        "laracart",
+        "shopping",
+        "laravel shopping"
+    ],
     "type": "library",
     "license": "MIT",
     "autoload": {
@@ -10,9 +18,16 @@
     },
     "authors": [
         {
-            "name": "nhanchaukp"
+            "name": "nhanchaukp",
+            "email": "nhanchauthai@gmail.com",
+            "website": "https://github.com/nhanchaukp",
+            "role": "Developer"
         }
     ],
+    "support": {
+        "issues": "https://github.com/nhanchaukp/laracart/issues",
+        "source": "https://github.com/nhanchaukp/laracart"
+    },
     "require": {
         "php": "^8.1",
         "illuminate/support": "^10.0|^11.0|^12.0",
