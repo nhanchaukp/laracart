@@ -20,9 +20,9 @@ interface CartDriver
     /**
      * Add an item to the cart.
      *
-     * @param  mixed  $itemable The item to add to the cart.
-     * @param  int    $quantity The quantity of the item to add (default is 1).
-     * @param  float  $price    The price of the item (default is -1, indicating the item's default price).
+     * @param  mixed  $itemable  The item to add to the cart.
+     * @param  int  $quantity  The quantity of the item to add (default is 1).
+     * @param  float  $price  The price of the item (default is -1, indicating the item's default price).
      * @param  array  $options  Additional options for the item.
      * @return Cart The updated cart instance.
      */
@@ -31,7 +31,7 @@ interface CartDriver
     /**
      * Retrieve a specific item from the cart.
      *
-     * @param mixed $itemable The item to search for in the cart.
+     * @param  mixed  $itemable  The item to search for in the cart.
      * @return CartItem|null The CartItem instance if found, or null if the item does not exist in the cart.
      */
     public function getItem($itemable): ?CartItem;
@@ -39,7 +39,7 @@ interface CartDriver
     /**
      * Remove an item from the cart.
      *
-     * @param  mixed  $itemable The item to remove from the cart.
+     * @param  mixed  $itemable  The item to remove from the cart.
      * @return Cart The updated cart instance.
      */
     public function removeItem($itemable): Cart;
@@ -47,8 +47,8 @@ interface CartDriver
     /**
      * Update item quantity in the cart.
      *
-     * @param  mixed  $itemable The item to update in the cart.
-     * @param  int    $quantity The new quantity for the item.
+     * @param  mixed  $itemable  The item to update in the cart.
+     * @param  int  $quantity  The new quantity for the item.
      * @return Cart The updated cart instance.
      */
     public function updateItemQuantity($itemable, int $quantity): Cart;
@@ -56,8 +56,8 @@ interface CartDriver
     /**
      * Increase item quantity in the cart.
      *
-     * @param  mixed  $itemable The item to increase the quantity of.
-     * @param  int    $quantity The quantity to increase (default is 1).
+     * @param  mixed  $itemable  The item to increase the quantity of.
+     * @param  int  $quantity  The quantity to increase (default is 1).
      * @return Cart The updated cart instance.
      */
     public function increaseQuantity($itemable, int $quantity = 1): Cart;
@@ -65,8 +65,8 @@ interface CartDriver
     /**
      * Decrease item quantity in the cart.
      *
-     * @param  mixed  $itemable The item to decrease the quantity of.
-     * @param  int    $quantity The quantity to decrease (default is 1).
+     * @param  mixed  $itemable  The item to decrease the quantity of.
+     * @param  int  $quantity  The quantity to decrease (default is 1).
      * @return Cart The updated cart instance.
      */
     public function decreaseQuantity($itemable, int $quantity = 1): Cart;
@@ -102,7 +102,7 @@ interface CartDriver
     /**
      * Apply a discount to the cart based on a percentage.
      *
-     * @param float $percent The discount percentage to apply (e.g., 10 for 10%).
+     * @param  float  $percent  The discount percentage to apply (e.g., 10 for 10%).
      * @return Cart The updated cart instance with the discount applied.
      */
     public function setDiscount(float $percent): Cart;
@@ -110,7 +110,7 @@ interface CartDriver
     /**
      * Assign the current cart to a specific user, typically transferring a guest cart to a logged-in user.
      *
-     * @param int $userId The ID of the user to assign the cart to.
+     * @param  int  $userId  The ID of the user to assign the cart to.
      * @return Cart The updated cart instance after assignment.
      */
     public function assignToUser(int $userId): Cart;

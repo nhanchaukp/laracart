@@ -11,22 +11,16 @@ interface Cartable
 {
     /**
      * Get the price of the cartable item.
-     *
-     * @return float
      */
     public function getCartItemPrice(): float;
 
     /**
      * Get the name of the cartable item.
-     *
-     * @return string
      */
     public function getCartItemName(): string;
 
     /**
      * Get any additional data for the cartable item.
-     *
-     * @return array
      */
     public function getCartItemOptions(): array;
 }

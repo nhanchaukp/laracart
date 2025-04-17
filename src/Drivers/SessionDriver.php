@@ -72,6 +72,7 @@ class SessionDriver implements CartDriver
     public function getItem($itemable): ?CartItem
     {
         $cart = $this->getCart();
+
         return $cart->items->first(function ($i) use ($itemable) {
             return $i->itemable_id == $itemable->id && $i->itemable_type == get_class($itemable);
         });

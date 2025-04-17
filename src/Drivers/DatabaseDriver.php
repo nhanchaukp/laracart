@@ -97,7 +97,7 @@ class DatabaseDriver implements CartDriver
     {
         $cart = $this->getCart();
         $item = $cart->items()->where('itemable_id', $itemable->id)->where('itemable_type', get_class($itemable))->first();
-        
+
         if (! $item) {
             throw new \RuntimeException('The item not found');
         }
@@ -133,7 +133,7 @@ class DatabaseDriver implements CartDriver
         }
         $item->quantity = max(1, $item->quantity - $quantity);
         $item->save();
-        
+
         return $this->getCart();
     }
 
