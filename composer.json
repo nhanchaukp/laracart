@@ -1,5 +1,5 @@
 {
-    "name": "NhanChauKP/laracart",
+    "name": "nhanchaukp/laracart",
     "description": "Enhanced Laravel shopping cart package with multiple storage drivers",
     "type": "library",
     "license": "MIT",
