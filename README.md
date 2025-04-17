@@ -1,3 +1,5 @@
+![LaraCart](https://socialify.git.ci/nhanchaukp/laracart/image?custom_description=LaraCart+is+a+Laravel+package+that+provides+a+flexible+and+extensible+shopping+cart+system.&description=1&logo=https%3A%2F%2Fupload.wikimedia.org%2Fwikipedia%2Fcommons%2Fthumb%2F9%2F9a%2FLaravel.svg%2F1200px-Laravel.svg.png&name=1&owner=1&pattern=Signal&theme=Light)
+
 # LaraCart
 ![Build Status](https://img.shields.io/github/actions/workflow/status/nhanchaukp/laracart/ci.yml?branch=main) 
 ![License](https://img.shields.io/github/license/nhanchaukp/laracart) 
