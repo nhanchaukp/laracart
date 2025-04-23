@@ -2,7 +2,6 @@
 
 namespace NhanChauKP\LaraCart\Drivers;
 
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Session;
 use NhanChauKP\LaraCart\Contracts\CartDriver;
 use NhanChauKP\LaraCart\Models\Cart;
@@ -17,7 +16,7 @@ class DatabaseDriver implements CartDriver
      */
     public function getCart(): Cart
     {
-        $user = Auth::user();
+        $user = auth()->user();
         if ($user) {
             $sessionId = Session::getId();
             $this->cart = Cart::where('session_id', $sessionId)->first();
