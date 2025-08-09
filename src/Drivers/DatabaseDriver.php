@@ -3,13 +3,15 @@
 namespace NhanChauKP\LaraCart\Drivers;
 
 use Illuminate\Support\Facades\Session;
+use Illuminate\Support\Facades\Cookie;
+use Illuminate\Support\Str;
 use NhanChauKP\LaraCart\Contracts\CartDriver;
 use NhanChauKP\LaraCart\Models\Cart;
 use NhanChauKP\LaraCart\Models\CartItem;
 
 class DatabaseDriver implements CartDriver
 {
-    protected ?Cart $cart;
+    protected ?Cart $cart = null;
 
     /**
      * {@inheritDoc}
@@ -17,22 +19,100 @@ class DatabaseDriver implements CartDriver
     public function getCart(): Cart
     {
         $user = auth()->user();
+        
         if ($user) {
-            $sessionId = Session::getId();
-            $this->cart = Cart::where('session_id', $sessionId)->first();
-            if ($this->cart) {
-                $this->cart->user_id = $user->id;
-                $this->cart->session_id = null;
-                $this->cart->save();
+            $guestCartId = $this->getGuestCartId();
+            $guestCart = Cart::where('session_id', $guestCartId)->with('items')->first();
+            $userCart = Cart::where('user_id', $user->id)->with('items')->first();
+            
+            if ($guestCart && $userCart) {
+                $this->mergeSessionCartToUserCart($guestCart, $userCart);
+                $guestCart->delete();
+                $this->clearGuestCartCookie();
+                $this->cart = $userCart;
+            } elseif ($guestCart) {
+                $guestCart->user_id = $user->id;
+                $guestCart->session_id = null;
+                $guestCart->save();
+                $this->clearGuestCartCookie();
+                $this->cart = $guestCart;
             } else {
                 $this->cart = Cart::firstOrCreate(['user_id' => $user->id]);
             }
         } else {
-            $sessionId = Session::getId();
-            $this->cart = Cart::firstOrCreate(['session_id' => $sessionId]);
+            $guestCartId = $this->getGuestCartId();
+            $this->cart = Cart::firstOrCreate(['session_id' => $guestCartId]);
         }
 
         return $this->cart->load('items');
+    }
+
+    /**
+     * Merge guest cart items into user cart
+     */
+    protected function mergeSessionCartToUserCart(Cart $guestCart, Cart $userCart): void
+    {
+        $guestCart->load('items');
+        $userCart->load('items');
+        
+        foreach ($guestCart->items as $guestItem) {
+            $existingItem = $userCart->items()
+                ->where('itemable_id', $guestItem->itemable_id)
+                ->where('itemable_type', $guestItem->itemable_type)
+                ->first();
+            
+            if ($existingItem) {
+                $existingItem->quantity += $guestItem->quantity;
+                $existingItem->save();
+            } else {
+                $userCart->items()->create([
+                    'itemable_id' => $guestItem->itemable_id,
+                    'itemable_type' => $guestItem->itemable_type,
+                    'quantity' => $guestItem->quantity,
+                    'price' => $guestItem->price,
+                    'options' => $guestItem->options,
+                ]);
+            }
+        }
+        
+        if ($guestCart->discount_percent > $userCart->discount_percent) {
+            $userCart->discount_percent = $guestCart->discount_percent;
+            $userCart->save();
+        }
+        
+        $userCart->refresh();
+    }
+
+    /**
+     * Reset cart cache
+     */
+    protected function resetCartCache(): void
+    {
+        $this->cart = null;
+    }
+
+    /**
+     * Get guest cart identifier
+     */
+    protected function getGuestCartId(): string
+    {
+        $cookieName = 'guest_cart_id';
+        $guestCartId = Cookie::get($cookieName);
+        
+        if (!$guestCartId) {
+            $guestCartId = 'guest_' . Str::random(32);
+            Cookie::queue($cookieName, $guestCartId, 60 * 24 * 30); // 30 days
+        }
+        
+        return $guestCartId;
+    }
+
+    /**
+     * Clear guest cart cookie
+     */
+    protected function clearGuestCartCookie(): void
+    {
+        Cookie::queue(Cookie::forget('guest_cart_id'));
     }
 
     /**
@@ -65,6 +145,7 @@ class DatabaseDriver implements CartDriver
             ]);
         }
 
+        $this->resetCartCache();
         return $this->getCart();
     }
 
@@ -86,6 +167,7 @@ class DatabaseDriver implements CartDriver
         $cart = $this->getCart();
         $cart->items()->where('itemable_id', $itemable->id)->where('itemable_type', get_class($itemable))->delete();
 
+        $this->resetCartCache();
         return $this->getCart();
     }
 
@@ -106,6 +188,7 @@ class DatabaseDriver implements CartDriver
         $item->quantity = $quantity;
         $item->save();
 
+        $this->resetCartCache();
         return $this->getCart();
     }
 
@@ -133,6 +216,7 @@ class DatabaseDriver implements CartDriver
         $item->quantity = max(1, $item->quantity - $quantity);
         $item->save();
 
+        $this->resetCartCache();
         return $this->getCart();
     }
 
@@ -144,6 +228,7 @@ class DatabaseDriver implements CartDriver
         $cart = $this->getCart();
         $cart->items()->delete();
 
+        $this->resetCartCache();
         return $this->getCart();
     }
 
