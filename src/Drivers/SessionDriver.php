@@ -2,8 +2,8 @@
 
 namespace NhanChauKP\LaraCart\Drivers;
 
-use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Cookie;
+use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Str;
 use NhanChauKP\LaraCart\Contracts\CartDriver;
 use NhanChauKP\LaraCart\Models\Cart;
@@ -12,12 +12,13 @@ use NhanChauKP\LaraCart\Models\CartItem;
 class SessionDriver implements CartDriver
 {
     protected $sessionKey;
+
     protected $guestSessionKey;
 
     public function __construct()
     {
         $this->sessionKey = config('laracart.session_key', 'laracart');
-        $this->guestSessionKey = $this->sessionKey . '_guest';
+        $this->guestSessionKey = $this->sessionKey.'_guest';
     }
 
     /**
@@ -27,12 +28,12 @@ class SessionDriver implements CartDriver
     {
         $cookieName = 'guest_cart_session_id';
         $guestCartId = Cookie::get($cookieName);
-        
-        if (!$guestCartId) {
-            $guestCartId = 'guest_session_' . Str::random(32);
+
+        if (! $guestCartId) {
+            $guestCartId = 'guest_session_'.Str::random(32);
             Cookie::queue($cookieName, $guestCartId, 60 * 24 * 30); // 30 days
         }
-        
+
         return $guestCartId;
     }
 
@@ -52,10 +53,10 @@ class SessionDriver implements CartDriver
         foreach ($guestCart->items as $guestItem) {
             // Tìm item tương tự trong user cart
             $existingItem = $userCart->items->first(function ($item) use ($guestItem) {
-                return $item->itemable_id == $guestItem->itemable_id 
+                return $item->itemable_id == $guestItem->itemable_id
                     && $item->itemable_type == $guestItem->itemable_type;
             });
-            
+
             if ($existingItem) {
                 // Nếu đã có item tương tự, cộng dồn quantity
                 $existingItem->quantity += $guestItem->quantity;
@@ -70,12 +71,12 @@ class SessionDriver implements CartDriver
                 ]));
             }
         }
-        
+
         // Merge discount nếu guest cart có discount cao hơn
         if (($guestCart->discount_percent ?? 0) > ($userCart->discount_percent ?? 0)) {
             $userCart->discount_percent = $guestCart->discount_percent;
         }
-        
+
         return $userCart;
     }
 
@@ -85,36 +86,36 @@ class SessionDriver implements CartDriver
     public function getCart(): Cart
     {
         $user = auth()->user();
-        
+
         if ($user) {
             $userCartData = Session::get($this->sessionKey, []);
             $userCart = new Cart($userCartData);
             $userCart->items = collect($userCartData['items'] ?? [])->map(function ($item) {
                 return new CartItem($item);
             });
-            
+
             $guestCartId = $this->getGuestCartId();
-            $guestCartData = Session::get($this->guestSessionKey . '_' . $guestCartId, []);
-            
-            if (!empty($guestCartData['items'])) {
+            $guestCartData = Session::get($this->guestSessionKey.'_'.$guestCartId, []);
+
+            if (! empty($guestCartData['items'])) {
                 $guestCart = new Cart($guestCartData);
                 $guestCart->items = collect($guestCartData['items'])->map(function ($item) {
                     return new CartItem($item);
                 });
-                
+
                 $userCart = $this->mergeGuestCartToUserCart($guestCart, $userCart);
-                
-                Session::forget($this->guestSessionKey . '_' . $guestCartId);
+
+                Session::forget($this->guestSessionKey.'_'.$guestCartId);
                 $this->clearGuestCartCookie();
-                
+
                 $this->storeCart($userCart);
             }
-            
+
             return $userCart;
         } else {
             $guestCartId = $this->getGuestCartId();
-            $guestSessionKey = $this->guestSessionKey . '_' . $guestCartId;
-            
+            $guestSessionKey = $this->guestSessionKey.'_'.$guestCartId;
+
             $data = Session::get($guestSessionKey, []);
             $cart = new Cart($data);
             $cart->items = collect($data['items'] ?? [])->map(function ($item) {
@@ -132,13 +133,13 @@ class SessionDriver implements CartDriver
     {
         $data = $cart->toArray();
         $data['items'] = $cart->items->map->toArray()->all();
-        
+
         $user = auth()->user();
         if ($user) {
             Session::put($this->sessionKey, $data);
         } else {
             $guestCartId = $this->getGuestCartId();
-            $guestSessionKey = $this->guestSessionKey . '_' . $guestCartId;
+            $guestSessionKey = $this->guestSessionKey.'_'.$guestCartId;
             Session::put($guestSessionKey, $data);
         }
 
@@ -242,12 +243,13 @@ class SessionDriver implements CartDriver
             Session::forget($this->sessionKey);
         } else {
             $guestCartId = $this->getGuestCartId();
-            $guestSessionKey = $this->guestSessionKey . '_' . $guestCartId;
+            $guestSessionKey = $this->guestSessionKey.'_'.$guestCartId;
             Session::forget($guestSessionKey);
         }
 
-        $cart = new Cart();
+        $cart = new Cart;
         $cart->items = collect();
+
         return $cart;
     }
 

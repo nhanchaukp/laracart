@@ -18,33 +18,46 @@ class DatabaseDriver implements CartDriver
      */
     public function getCart(): Cart
     {
+        if ($this->cart) {
+            return $this->cart;
+        }
+
         $user = auth()->user();
-        
+        $query = Cart::query()->with('items');
+
         if ($user) {
             $guestCartId = $this->getGuestCartId();
-            $guestCart = Cart::where('session_id', $guestCartId)->with('items')->first();
-            $userCart = Cart::where('user_id', $user->id)->with('items')->first();
-            
+            $carts = Cart::with('items')
+                ->whereIn('session_id', [$guestCartId])
+                ->orWhere('user_id', $user->id)
+                ->get()
+                ->keyBy(fn($cart) => $cart->user_id ? 'user' : 'guest');
+
+            $guestCart = $carts->get('guest');
+            $userCart  = $carts->get('user');
+
             if ($guestCart && $userCart) {
                 $this->mergeSessionCartToUserCart($guestCart, $userCart);
                 $guestCart->delete();
                 $this->clearGuestCartCookie();
-                $this->cart = $userCart;
+                $this->cart = $userCart->load('items');
             } elseif ($guestCart) {
-                $guestCart->user_id = $user->id;
-                $guestCart->session_id = null;
-                $guestCart->save();
+                $guestCart->update([
+                    'user_id' => $user->id,
+                    'session_id' => null,
+                ]);
                 $this->clearGuestCartCookie();
-                $this->cart = $guestCart;
+                $this->cart = $guestCart->load('items');
             } else {
                 $this->cart = Cart::firstOrCreate(['user_id' => $user->id]);
             }
         } else {
             $guestCartId = $this->getGuestCartId();
             $this->cart = Cart::firstOrCreate(['session_id' => $guestCartId]);
+            $this->cart->loadMissing('items');
         }
 
-        return $this->cart->load('items');
+        return $this->cart;
     }
 
     /**
@@ -52,36 +65,23 @@ class DatabaseDriver implements CartDriver
      */
     protected function mergeSessionCartToUserCart(Cart $guestCart, Cart $userCart): void
     {
-        $guestCart->load('items');
-        $userCart->load('items');
-        
-        foreach ($guestCart->items as $guestItem) {
-            $existingItem = $userCart->items()
-                ->where('itemable_id', $guestItem->itemable_id)
-                ->where('itemable_type', $guestItem->itemable_type)
-                ->first();
-            
-            if ($existingItem) {
-                $existingItem->quantity += $guestItem->quantity;
-                $existingItem->save();
+        $guestItems = $guestCart->items;
+        $userItems  = $userCart->items->keyBy(fn($i) => $i->itemable_type . '#' . $i->itemable_id);
+
+        foreach ($guestItems as $guestItem) {
+            $key = $guestItem->itemable_type . '#' . $guestItem->itemable_id;
+            if (isset($userItems[$key])) {
+                $userItems[$key]->increment('quantity', $guestItem->quantity);
             } else {
-                $userCart->items()->create([
-                    'itemable_id' => $guestItem->itemable_id,
-                    'itemable_type' => $guestItem->itemable_type,
-                    'quantity' => $guestItem->quantity,
-                    'price' => $guestItem->price,
-                    'options' => $guestItem->options,
-                ]);
+                $userCart->items()->create($guestItem->only(['itemable_id', 'itemable_type', 'quantity', 'price', 'options']));
             }
         }
-        
+
         if ($guestCart->discount_percent > $userCart->discount_percent) {
-            $userCart->discount_percent = $guestCart->discount_percent;
-            $userCart->save();
+            $userCart->update(['discount_percent' => $guestCart->discount_percent]);
         }
-        
-        $userCart->refresh();
     }
+
 
     /**
      * Reset cart cache
@@ -98,12 +98,12 @@ class DatabaseDriver implements CartDriver
     {
         $cookieName = 'guest_cart_id';
         $guestCartId = Cookie::get($cookieName);
-        
+
         if (!$guestCartId) {
             $guestCartId = 'guest_' . Str::random(32);
             Cookie::queue($cookieName, $guestCartId, 60 * 24 * 30); // 30 days
         }
-        
+
         return $guestCartId;
     }
 
