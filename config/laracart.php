@@ -1,7 +1,7 @@
 <?php
 
-use Nhanchaukp\LaraCart\Models\Cart;
-use Nhanchaukp\LaraCart\Models\CartItem;
+use NhanChauKP\LaraCart\Models\Cart;
+use NhanChauKP\LaraCart\Models\CartItem;
 
 return [
     /*

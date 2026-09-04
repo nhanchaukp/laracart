@@ -2,6 +2,7 @@
 
 namespace NhanChauKP\LaraCart;
 
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\App;
 use NhanChauKP\LaraCart\Contracts\CartDriver;
 use NhanChauKP\LaraCart\Models\Cart;
@@ -15,14 +16,14 @@ class LaraCart
     /**
      * @var CartDriver The driver instance used for cart operations.
      */
-    protected $driver;
+    protected CartDriver $driver;
 
     /**
      * Constructor to initialize the cart driver.
      */
-    public function __construct()
+    public function __construct(?CartDriver $driver = null)
     {
-        $this->driver = App::make(CartDriver::class);
+        $this->driver = $driver ?? App::make(CartDriver::class);
     }
 
     /**
@@ -31,11 +32,19 @@ class LaraCart
      * @param  string  $driver  The name of the driver to switch to.
      * @return $this
      */
-    public function driver($driver)
+    public function driver(string $driver): self
     {
         $this->driver = App::makeWith(CartDriver::class, ['driver' => $driver]);
 
         return $this;
+    }
+
+    /**
+     * Get the active driver instance.
+     */
+    public function getDriver(): CartDriver
+    {
+        return $this->driver;
     }
 
     /**
@@ -51,9 +60,9 @@ class LaraCart
     /**
      * Store the cart.
      *
-     * @param  mixed  $cart  The cart instance to store.
+     * @param  Cart  $cart  The cart instance to store.
      */
-    public function storeCart(mixed $cart): Cart
+    public function storeCart(Cart $cart): Cart
     {
         return $this->driver->storeCart($cart);
     }
@@ -96,9 +105,8 @@ class LaraCart
      *
      * @param  mixed  $itemable  The item to update.
      * @param  int  $quantity  The new quantity.
-     * @return mixed
      */
-    public function updateItemQuantity($itemable, $quantity)
+    public function updateItemQuantity(mixed $itemable, int $quantity): Cart
     {
         return $this->driver->updateItemQuantity($itemable, $quantity);
     }
@@ -108,9 +116,8 @@ class LaraCart
      *
      * @param  mixed  $itemable  The item to increase.
      * @param  int  $quantity  The amount to increase (default: 1).
-     * @return mixed
      */
-    public function increaseQuantity($itemable, $quantity = 1)
+    public function increaseQuantity(mixed $itemable, int $quantity = 1): Cart
     {
         return $this->driver->increaseQuantity($itemable, $quantity);
     }
@@ -120,29 +127,26 @@ class LaraCart
      *
      * @param  mixed  $itemable  The item to decrease.
      * @param  int  $quantity  The amount to decrease (default: 1).
-     * @return mixed
      */
-    public function decreaseQuantity($itemable, $quantity = 1)
+    public function decreaseQuantity(mixed $itemable, int $quantity = 1): Cart
     {
         return $this->driver->decreaseQuantity($itemable, $quantity);
     }
 
     /**
      * Clear the cart.
-     *
-     * @return mixed
      */
-    public function clear()
+    public function clear(): Cart
     {
         return $this->driver->clear();
     }
 
     /**
-     * Get the count of items in the cart.
+     * Get the count of unique items in the cart.
      *
      * @return int The number of items in the cart.
      */
-    public function count()
+    public function count(): int
     {
         return $this->driver->count();
     }
@@ -152,9 +156,25 @@ class LaraCart
      *
      * @return int The sum of quantities of all items.
      */
-    public function quantitySum()
+    public function quantitySum(): int
     {
-        return $this->driver->quantitySum();
+        return $this->driver->getTotalQuantity();
+    }
+
+    /**
+     * Get the total quantity of items in the cart.
+     */
+    public function getTotalQuantity(): int
+    {
+        return $this->driver->getTotalQuantity();
+    }
+
+    /**
+     * Get the total quantity of items in the cart (alias of getTotalQuantity).
+     */
+    public function totalQuantity(): int
+    {
+        return $this->driver->getTotalQuantity();
     }
 
     /**
@@ -162,7 +182,7 @@ class LaraCart
      *
      * @return float The total price.
      */
-    public function total()
+    public function total(): float
     {
         return $this->driver->total();
     }
@@ -171,9 +191,8 @@ class LaraCart
      * Set a discount percentage for the cart.
      *
      * @param  float  $percent  The discount percentage.
-     * @return mixed
      */
-    public function setDiscount($percent)
+    public function setDiscount(float $percent): Cart
     {
         return $this->driver->setDiscount($percent);
     }
@@ -182,9 +201,8 @@ class LaraCart
      * Assign the cart to a specific user.
      *
      * @param  int  $userId  The ID of the user.
-     * @return mixed
      */
-    public function assignToUser($userId)
+    public function assignToUser(int $userId): Cart
     {
         return $this->driver->assignToUser($userId);
     }
@@ -192,9 +210,9 @@ class LaraCart
     /**
      * Get all items in the cart.
      *
-     * @return array The list of items in the cart.
+     * @return Collection<int, CartItem> The list of items in the cart.
      */
-    public function getItems()
+    public function getItems(): Collection
     {
         return $this->driver->getItems();
     }
@@ -204,7 +222,7 @@ class LaraCart
      *
      * @return bool True if the cart is empty, false otherwise.
      */
-    public function isEmpty()
+    public function isEmpty(): bool
     {
         return $this->driver->isEmpty();
     }

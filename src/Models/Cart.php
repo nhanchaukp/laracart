@@ -27,6 +27,9 @@ class Cart extends Model
 
     public function items(): HasMany
     {
-        return $this->hasMany(CartItem::class);
+        /** @var class-string<CartItem> $cartItemModel */
+        $cartItemModel = config('laracart.models.cart_item', CartItem::class);
+
+        return $this->hasMany($cartItemModel);
     }
 }

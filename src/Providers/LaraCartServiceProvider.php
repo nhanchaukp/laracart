@@ -25,20 +25,20 @@ class LaraCartServiceProvider extends ServiceProvider
             __DIR__.'/../../config/laracart.php', 'laracart'
         );
 
-        $this->app->singleton(LaraCart::class, function ($app) {
-            return new LaraCart($app);
+        $this->app->singleton(LaraCart::class, function () {
+            return new LaraCart;
         });
 
         $this->app->bind('laracart', function ($app) {
             return $app->make(LaraCart::class);
         });
 
-        $this->app->bind(CartDriver::class, function ($app) {
-            $driver = config('laracart.driver', 'database');
+        $this->app->bind(CartDriver::class, function ($app, array $parameters = []) {
+            $driver = $parameters['driver'] ?? config('laracart.driver', 'database');
 
             return match ($driver) {
-                'session' => new SessionDriver($app),
-                default => new DatabaseDriver($app),
+                'session' => new SessionDriver,
+                default => new DatabaseDriver,
             };
         });
     }
