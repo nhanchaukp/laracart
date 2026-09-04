@@ -172,14 +172,19 @@ class SessionDriver implements CartDriver
 
             $this->cart = $userCart;
         } else {
-            $guestCartId = $this->getGuestCartId(createIfMissing: true);
-            $guestSessionKey = $this->guestSessionKey.'_'.$guestCartId;
+            $guestCartId = $this->getGuestCartId(createIfMissing: false);
 
-            $data = Session::get($guestSessionKey, []);
-            $cart = new $cartModel($data);
-            $cart->items = collect($data['items'] ?? [])->map(function ($item) use ($cartItemModel) {
-                return new $cartItemModel($item);
-            });
+            if ($guestCartId) {
+                $guestSessionKey = $this->guestSessionKey.'_'.$guestCartId;
+                $data = Session::get($guestSessionKey, []);
+                $cart = new $cartModel($data);
+                $cart->items = collect($data['items'] ?? [])->map(function ($item) use ($cartItemModel) {
+                    return new $cartItemModel($item);
+                });
+            } else {
+                $cart = new $cartModel;
+                $cart->items = collect();
+            }
 
             $this->cart = $cart;
         }

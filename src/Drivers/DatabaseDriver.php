@@ -98,9 +98,16 @@ class DatabaseDriver implements CartDriver
                 $this->cart->loadMissing('items.itemable');
             }
         } else {
-            $guestCartId = $this->getGuestCartId(createIfMissing: true);
-            $this->cart = $cartModel::firstOrCreate(['session_id' => $guestCartId]);
-            $this->cart->loadMissing('items.itemable');
+            $guestCartId = $this->getGuestCartId(createIfMissing: false);
+
+            if ($guestCartId) {
+                $this->cart = $cartModel::firstOrCreate(['session_id' => $guestCartId]);
+                $this->cart->loadMissing('items.itemable');
+            } else {
+                $cart = new $cartModel;
+                $cart->setRelation('items', collect());
+                $this->cart = $cart;
+            }
         }
 
         return $this->cart;
@@ -187,6 +194,16 @@ class DatabaseDriver implements CartDriver
     public function addItem($itemable, int $quantity = 1, float $price = -1, array $options = []): Cart
     {
         $cart = $this->getCart();
+
+        if (! $cart->exists) {
+            $user = auth()->user();
+            if ($user) {
+                $cart->user_id = $user->id;
+            } else {
+                $cart->session_id = $this->getGuestCartId(createIfMissing: true);
+            }
+            $cart->save();
+        }
 
         $item = $cart->items->first(function ($i) use ($itemable) {
             return $i->itemable_id == $itemable->id && $i->itemable_type === get_class($itemable);
@@ -320,11 +337,14 @@ class DatabaseDriver implements CartDriver
     {
         $cart = $this->getCart();
 
-        foreach ($cart->items as $item) {
-            event(new CartItemRemoved($cart, $item));
+        if ($cart->exists) {
+            foreach ($cart->items as $item) {
+                event(new CartItemRemoved($cart, $item));
+            }
+
+            $cart->items()->delete();
         }
 
-        $cart->items()->delete();
         $cart->setRelation('items', collect());
 
         return $cart;
@@ -368,6 +388,16 @@ class DatabaseDriver implements CartDriver
     {
         $cart = $this->getCart();
         $cart->discount_percent = $percent;
+
+        if (! $cart->exists) {
+            $user = auth()->user();
+            if ($user) {
+                $cart->user_id = $user->id;
+            } else {
+                $cart->session_id = $this->getGuestCartId(createIfMissing: true);
+            }
+        }
+
         $cart->save();
 
         return $cart;
@@ -381,7 +411,10 @@ class DatabaseDriver implements CartDriver
         $cart = $this->getCart();
         $cart->user_id = $userId;
         $cart->session_id = null;
-        $cart->save();
+
+        if ($cart->exists) {
+            $cart->save();
+        }
 
         return $cart;
     }
