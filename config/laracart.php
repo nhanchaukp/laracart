@@ -1,5 +1,8 @@
 <?php
 
+use Nhanchaukp\LaraCart\Models\Cart;
+use Nhanchaukp\LaraCart\Models\CartItem;
+
 return [
     /*
     |--------------------------------------------------------------------------
@@ -44,8 +47,8 @@ return [
     |
     */
     'models' => [
-        'cart' => \Nhanchaukp\LaraCart\Models\Cart::class,
-        'cart_item' => \Nhanchaukp\LaraCart\Models\CartItem::class,
+        'cart' => Cart::class,
+        'cart_item' => CartItem::class,
     ],
 
     /*

@@ -2,6 +2,7 @@
 
 namespace NhanChauKP\LaraCart\Contracts;
 
+use Illuminate\Support\Collection;
 use NhanChauKP\LaraCart\Models\Cart;
 use NhanChauKP\LaraCart\Models\CartItem;
 
@@ -118,9 +119,9 @@ interface CartDriver
     /**
      * Retrieve all items currently in the cart.
      *
-     * @return \Illuminate\Support\Collection|CartItem[] A collection of CartItem instances in the cart.
+     * @return Collection|CartItem[] A collection of CartItem instances in the cart.
      */
-    public function getItems(): \Illuminate\Support\Collection;
+    public function getItems(): Collection;
 
     /**
      * Check if the cart is empty.

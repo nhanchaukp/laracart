@@ -2,6 +2,7 @@
 
 namespace NhanChauKP\LaraCart\Drivers;
 
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cookie;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Str;
@@ -306,7 +307,7 @@ class SessionDriver implements CartDriver
     /**
      * {@inheritDoc}
      */
-    public function getItems(): \Illuminate\Support\Collection
+    public function getItems(): Collection
     {
         return $this->getCart()->items;
     }
